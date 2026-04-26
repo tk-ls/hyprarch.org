@@ -123,25 +123,19 @@
 
     <script>
         const commandText = "neofetch";
-        const fetchLines = [
-            '<span style="color:var(--arch-blue); font-weight:bold;">will</span>@<span style="color:var(--arch-blue); font-weight:bold;">hyprarch</span>',
-            '<span style="color:var(--arch-blue);">-------------</span>',
-            '<span class="label">OS:</span> Arch Linux x86_64',
-            '<span class="label">Host:</span> Cloudflare Pages',
-            '<span class="label">Kernel:</span> 6.19.13-arch1-1',
-            '<span class="label">Uptime:</span> 100%',
-            '<span class="label">Packages:</span> 679 (pacman)',
-            '<span class="label">Shell:</span> bash 5.3.9',
-            '<span class="label">Resolution:</span> 3840x2160',
-            '<span class="label">DE:</span> Hyprland',
-            '<span class="label">WM:</span> sway',
-            '<span class="label">Theme:</span> Adwaita-dark [GTK3]',
-            '<span class="label">Icons:</span> Yaru-blue [GTK3]',
-            '<span class="label">Terminal:</span> alacritty',
-            '<span class="label">CPU:</span> Intel(R) Core(TM) i9-14900 (32) @ 2.00 GHz',
-            '<span class="label">GPU:</span> AMD Radeon RX 6300 @ 2.22 GHz (1.96 GiB)',
-            '<span class="label">Memory:</span> 6.7GiB / 32GiB'
-        ];
+
+        function getBrowser() {
+            const ua = navigator.userAgent;
+            if (ua.includes("Firefox")) return "Firefox";
+            if (ua.includes("Edg")) return "Edge";
+            if (ua.includes("Chrome")) return "Chrome";
+            if (ua.includes("Safari")) return "Safari";
+            return "Web Browser";
+        }
+
+        function getResolution() {
+            return `${window.screen.width}x${window.screen.height}`;
+        }
 
         async function start() {
             const typed = document.getElementById('typed-command');
@@ -149,6 +143,25 @@
             const nf = document.getElementById('neofetch');
             const container = document.getElementById('lines-container');
             const final = document.getElementById('final-prompt');
+
+            const fetchLines = [
+                '<span style="color:var(--arch-blue); font-weight:bold;">will</span>@<span style="color:var(--arch-blue); font-weight:bold;">hyprarch</span>',
+                '<span style="color:var(--arch-blue);">-------------</span>',
+                `<span class="label">OS:</span> Cloudflare Edge (Linux x86_64)`,
+                `<span class="label">Host:</span> hyprarch.org / Pages Framework`,
+                `<span class="label">Kernel:</span> 2026.4-LATEST`,
+                `<span class="label">Uptime:</span> 99.999% (The "Five Nines" flex)`,
+                `<span class="label">Packages:</span> 1 (index.html)`,
+                `<span class="label">Shell:</span> bash 5.3.9`,
+                `<span class="label">Resolution:</span> ${getResolution()}`,
+                `<span class="label">WM:</span> ${getBrowser()}`,
+                `<span class="label">Theme:</span> Adwaita-dark [GTK3]`,
+                `<span class="label">Icons:</span> Yaru-blue [GTK3]`,
+                `<span class="label">Terminal:</span> alacritty`,
+                `<span class="label">CPU:</span> Intel(R) Core(TM) i9-14900 (32) @ 2.00 GHz`,
+                `<span class="label">GPU:</span> AMD Radeon RX 6300 @ 2.22 GHz (1.96 GiB)`,
+                `<span class="label">Memory:</span> 6.7GiB / 32GiB`
+            ];
 
             // 1. Initial wait
             await new Promise(r => setTimeout(r, 600));
