@@ -34,8 +34,8 @@
         }
 
         /* Prompts */
-        .prompt-symbol { color: var(--arch-blue); font-weight: bold; }
-        .dir { color: var(--magenta); font-weight: bold; }
+        .prompt-symbol { color: #ffffff; font-weight: normal; }
+        .dir { color: #ffffff; font-weight: normal; }
         
         .block-cursor { 
             display: inline-block; 
@@ -48,8 +48,8 @@
         .blink { animation: blink 1s steps(1) infinite; }
         @keyframes blink { 50% { opacity: 0; } }
 
-        /* Fastfetch Section */
-        #fastfetch {
+        /* Neofetch Section */
+        #neofetch {
             display: none;
             margin: 15px 0;
             overflow: hidden;
@@ -61,6 +61,7 @@
             margin-right: 35px; 
             font-weight: bold;
             border: none;
+            margin-top: 0;
         }
 
         .fetch-content {
@@ -72,22 +73,22 @@
         .fetch-line {
             display: none; /* Controlled by JS for instant appearance */
             margin-bottom: 1px;
+            white-space: pre;
         }
 
         #final-prompt { display: none; margin-top: 10px; }
 
         .label { color: var(--arch-blue); font-weight: bold; }
-        .dot { display: inline-block; width: 14px; height: 14px; margin-right: 4px; border-radius: 0px; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div id="container">
         <div id="initial-line">
-            <span class="dir">~</span> <span class="prompt-symbol">➜</span> 
+            <span class="dir">~</span> <span class="prompt-symbol">❯</span> 
             <span id="typed-command"></span><span class="block-cursor blink" id="cursor-1"></span>
         </div>
 
-        <div id="fastfetch">
+        <div id="neofetch">
 <pre class="ascii">
                    -`
                   .o+`
@@ -103,51 +104,57 @@
         .oossssso-````/ossssss+`
        -osssssso.      :ssssssso.
       :osssssss/        osssso+++.
-     /ossssssss/        ossssssooo/
-    /bclshhhhhh/        hhhhhhhhhhh.
-   `hhhhhhhhhhh/        hhhhhhhhhhh-
-    `::::::::::.        ::::::::::.
+     /ossssssss/        +ssssooo/-
+   `/ossssso+/:-        -:/+osssso+-
+  `+sso+:-`                 `.-/+oso:
+ `++:.                           `-/+/
+ .`                                 `/
 </pre>
             <div class="fetch-content" id="lines-container">
                 </div>
         </div>
 
         <div id="final-prompt">
-            <span class="dir">~</span> <span class="prompt-symbol">➜</span> 
+            <span class="dir">~</span> <span class="prompt-symbol">❯</span> 
             <span class="block-cursor blink"></span>
         </div>
     </div>
 
     <script>
-        const commandText = "fastfetch";
+        const commandText = "neofetch";
         const fetchLines = [
-            '<span style="color:var(--arch-blue); font-weight:bold;">william</span>@<span style="color:var(--arch-blue); font-weight:bold;">hyprarch</span>',
-            '<span style="color:var(--gray);">-----------------------</span>',
+            '<span style="color:var(--arch-blue); font-weight:bold;">dog</span>@<span style="color:var(--arch-blue); font-weight:bold;">archlinux</span>',
+            '<span style="color:var(--arch-blue);">-------------</span>',
             '<span class="label">OS:</span> Arch Linux x86_64',
-            '<span class="label">Host:</span> Cloudflare Pages (Edge)',
-            '<span class="label">Kernel:</span> 6.8.9-arch1-1',
-            '<span class="label">Uptime:</span> 99.999%',
-            '<span class="label">Shell:</span> zsh 5.9',
-            '<span class="label">WM:</span> Hyprland (Wayland)',
-            '<span class="label">Theme:</span> Catppuccin-Macchiato',
-            '<span class="label">Terminal:</span> st-256color',
-            '<span class="label">CPU:</span> Apple M1 (4) @ 3.20GHz',
-            '<span class="label">Memory:</span> 1.2GiB / 24GiB',
+            '<span class="label">Host:</span> Latitude 5440',
+            '<span class="label">Kernel:</span> 6.19.13-arch1-1',
+            '<span class="label">Uptime:</span> 1 hour, 22 mins',
+            '<span class="label">Packages:</span> 968 (pacman)',
+            '<span class="label">Shell:</span> bash 5.3.9',
+            '<span class="label">Resolution:</span> 1920x1080',
+            '<span class="label">DE:</span> Hyprland',
+            '<span class="label">WM:</span> sway',
+            '<span class="label">Theme:</span> Adwaita-dark [GTK3]',
+            '<span class="label">Icons:</span> Yaru-blue [GTK3]',
+            '<span class="label">Terminal:</span> alacritty',
+            '<span class="label">CPU:</span> 13th Gen Intel i7-1355U (12) @ 5.000GHz',
+            '<span class="label">GPU:</span> Intel Raptor Lake-P [UHD Graphics]',
+            '<span class="label">Memory:</span> 1218MiB / 15671MiB',
             '',
-            '<div class="dot" style="background:#000;"></div><div class="dot" style="background:#f38ba8;"></div><div class="dot" style="background:#a6e3a1;"></div><div class="dot" style="background:#f9e2af;"></div><div class="dot" style="background:#89b4fa;"></div><div class="dot" style="background:#f5c2e7;"></div><div class="dot" style="background:#94e2d5;"></div><div class="dot" style="background:#a6adc8;"></div>'
+            '<div style="display: flex;"><div style="width: 15px; height: 15px; background: #000000; margin-right: 5px;"></div><div style="width: 15px; height: 15px; background: #ff5555; margin-right: 5px;"></div><div style="width: 15px; height: 15px; background: #50fa7b; margin-right: 5px;"></div><div style="width: 15px; height: 15px; background: #f1fa8c; margin-right: 5px;"></div><div style="width: 15px; height: 15px; background: #bd93f9; margin-right: 5px;"></div><div style="width: 15px; height: 15px; background: #ff79c6; margin-right: 5px;"></div><div style="width: 15px; height: 15px; background: #8be9fd; margin-right: 5px;"></div><div style="width: 15px; height: 15px; background: #bbbbbb;"></div></div>'
         ];
 
         async function start() {
             const typed = document.getElementById('typed-command');
             const c1 = document.getElementById('cursor-1');
-            const ff = document.getElementById('fastfetch');
+            const nf = document.getElementById('neofetch');
             const container = document.getElementById('lines-container');
             const final = document.getElementById('final-prompt');
 
             // 1. Initial wait
             await new Promise(r => setTimeout(r, 600));
 
-            // 2. Type "fastfetch"
+            // 2. Type "neofetch"
             for (let char of commandText) {
                 typed.textContent += char;
                 await new Promise(r => setTimeout(r, 80));
@@ -156,7 +163,7 @@
             // 3. Enter key
             await new Promise(r => setTimeout(r, 250));
             c1.style.display = 'none';
-            ff.style.display = 'block';
+            nf.style.display = 'block';
 
             // 4. Print lines instantly (no fade/float)
             for (let content of fetchLines) {
