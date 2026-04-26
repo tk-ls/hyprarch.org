@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hyprarch Boot</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #terminal {
+            padding: 20px;
+            font-size: 14px;
+            line-height: 1.4;
+            flex-grow: 1;
+            white-space: pre-wrap;
+        }
+
+        .log-entry {
+            margin-bottom: 2px;
+        }
+
+        .success { color: #50fa7b; }
+        .info { color: #8be9fd; }
+        .warn { color: #f1fa8c; }
+
+        #neofetch {
+            display: none;
+            color: #bd93f9;
+            font-weight: bold;
+            animation: fadeIn 0.5s ease-in forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div id="terminal"></div>
+    <div id="neofetch">
+<pre>
+                   -`                    william@hyprarch
+                  .o+`                   ----------------
+                 `ooo/                   OS: Arch Linux x86_64
+                `+oooo:                  Host: Oracle Cloud Ampere A1
+               `+oooooo:                 Kernel: 6.x.x-arch1-1
+               -+oooooo+:                Uptime: 99.999%
+             `/:-:++oooo+:               Shell: zsh
+            `/++++/+++++++:              WM: Hyprland
+           `/++++++++++++++:             Theme: Catppuccin
+          `/+++ooooooooooooo/`           Status: Online
+         ./ooosssso++osssssso+`          
+        .oossssso-````/ossssss+`         [--------------------]
+       -osssssso.      :ssssssso.        
+      :osssssss/        osssso+++.       
+     /ossssssss/        ossssssooo/      
+    /bclshhhhhh/        hhhhhhhhhhh.     
+   `hhhhhhhhhhh/        hhhhhhhhhhh-     
+    `::::::::::.        ::::::::::.      
+</pre>
+    </div>
+
+    <script>
+        const logs = [
+            { text: "[  OK  ] Initializing HyperArch Kernel...", type: "success" },
+            { text: "[  OK  ] Mounting OCI Ampere A1 Flex storage...", type: "success" },
+            { text: "[ INFO ] Checking Cloudflare Edge network status...", type: "info" },
+            { text: "[  OK  ] Network online. Latency: 2ms", type: "success" },
+            { text: "[ INFO ] Loading Omarchy v2.4 configurations...", type: "info" },
+            { text: "[ WARN ] 'sixseven.best' legacy redirect detected.", type: "warn" },
+            { text: "[  OK  ] Starting Whisperer PWA Service...", type: "success" },
+            { text: "[  OK  ] Square POS API connected.", type: "success" },
+            { text: "[ INFO ] Greeting William Luk...", type: "info" },
+            { text: "Starting Hyprland session...", type: "info" },
+            { text: "---------------------------------------------", type: "info" }
+        ];
+
+        const terminal = document.getElementById('terminal');
+        const neofetch = document.getElementById('neofetch');
+
+        async function boot() {
+            for (const log of logs) {
+                const div = document.createElement('div');
+                div.className = 'log-entry ' + log.type;
+                div.textContent = log.text;
+                terminal.appendChild(div);
+                
+                // Auto-scroll to bottom
+                window.scrollTo(0, document.body.scrollHeight);
+                
+                // Random delay for "realism"
+                await new Promise(r => setTimeout(r, Math.random() * 300 + 50));
+            }
+
+            setTimeout(() => {
+                terminal.style.display = 'none';
+                neofetch.style.display = 'block';
+            }, 500);
+        }
+
+        boot();
+    </script>
+</body>
+</html>
