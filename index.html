@@ -23,7 +23,7 @@
             height: 100%;
             background-color: var(--bg);
             color: #ffffff;
-            font-family: 'Fira Code', 'Cascadia Code', 'Courier New', monospace;
+            font-family: 'Fira Code', 'Cascadia Code', monospace;
             overflow: hidden;
         }
 
@@ -37,16 +37,14 @@
         .log-entry { margin-bottom: 3px; }
         .ok { color: var(--green); font-weight: bold; }
         .info { color: var(--arch-blue); }
-        .warn { color: var(--yellow); }
         
-        /* Neofetch Styling */
         #neofetch {
             display: none;
             padding: 30px;
             animation: terminalFade 0.4s ease-out;
         }
 
-        .ascii { color: var(--arch-blue); float: left; margin-right: 30px; }
+        .ascii { color: var(--arch-blue); float: left; margin-right: 30px; border: none; }
         .info-label { color: var(--arch-blue); font-weight: bold; }
         .separator { color: var(--gray); }
         .dot { display: inline-block; width: 12px; height: 12px; margin-right: 5px; border-radius: 2px; }
@@ -92,4 +90,45 @@
 <span class="info-label">WM</span>: Hyprland (Wayland)<br>
 <span class="info-label">Terminal</span>: st-256color<br>
 <br>
-<div class="dot" style="background: #000;"></div><div class="dot" style="background: #ff5555;"></div>
+<div class="dot" style="background: #000;"></div><div class="dot" style="background: #ff5555;"></div><div class="dot" style="background: #50fa7b;"></div><div class="dot" style="background: #f1fa8c;"></div><div class="dot" style="background: #bd93f9;"></div><div class="dot" style="background: #ff79c6;"></div><div class="dot" style="background: #8be9fd;"></div><div class="dot" style="background: #f8f8f2;"></div>
+</div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const logs = [
+                { t: "[  OK  ] Started Initializing Ramdisk...", c: "ok" },
+                { t: "[  OK  ] Reached target Local File Systems.", c: "ok" },
+                { t: "[ INFO ] Loading Cloudflare Edge Runtime...", c: "info" },
+                { t: "[  OK  ] Detected edge node: SYD-01", c: "ok" },
+                { t: "[ INFO ] Applying system profile: 'hypr-minimalist'", c: "info" },
+                { t: "[  OK  ] Initializing encryption keys (FIDO2/LUKS)...", c: "ok" },
+                { t: "[ INFO ] Optimizing Wayland sockets...", c: "info" },
+                { t: "[  OK  ] Successfully bypassed 99.9% uptime limits.", c: "ok" },
+                { t: "[  OK  ] Reached target Multi-User System.", c: "ok" },
+                { t: "[ INFO ] Starting Hyprland session...", c: "info" }
+            ];
+
+            const term = document.getElementById('terminal');
+            const neo = document.getElementById('neofetch');
+
+            async function runBoot() {
+                for (const log of logs) {
+                    const line = document.createElement('div');
+                    line.className = 'log-entry';
+                    const status = log.t.split(']')[0] + ']';
+                    const rest = log.t.split(']')[1];
+                    line.innerHTML = `<span class="${log.c}">${status}</span>${rest}`;
+                    term.appendChild(line);
+                    await new Promise(r => setTimeout(r, Math.random() * 200 + 40));
+                }
+                setTimeout(() => {
+                    term.style.display = 'none';
+                    neo.style.display = 'block';
+                }, 600);
+            }
+            runBoot();
+        });
+    </script>
+</body>
+</html>
