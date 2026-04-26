@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#000000">
-    <title>hyprarch // fastfetch</title>
+    <title>hyprarch // ~</title>
     <style>
         :root {
             --bg: #000000;
@@ -23,74 +23,68 @@
             height: 100%;
             background-color: var(--bg);
             color: #ffffff;
-            font-family: 'Fira Code', 'Cascadia Code', monospace;
+            font-family: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
             overflow-x: hidden;
         }
 
         #container {
-            padding: 30px;
+            padding: 25px;
             font-size: 14px;
-            line-height: 1.5;
+            line-height: 1.2; /* Tighter terminal spacing */
         }
 
-        /* Command Line Styling */
-        .prompt { color: var(--green); font-weight: bold; }
-        .hostname { color: var(--arch-blue); }
-        .cursor { 
+        /* Prompts */
+        .prompt-symbol { color: var(--arch-blue); font-weight: bold; }
+        .dir { color: var(--magenta); font-weight: bold; }
+        
+        .block-cursor { 
             display: inline-block; 
             width: 8px; 
             height: 15px; 
             background: #fff; 
-            margin-left: 5px; 
-            animation: blink 1s infinite; 
+            vertical-align: middle;
+            margin-left: 2px;
         }
-
+        .blink { animation: blink 1s steps(1) infinite; }
         @keyframes blink { 50% { opacity: 0; } }
 
-        /* Fastfetch Grid */
+        /* Fastfetch Section */
         #fastfetch {
             display: none;
-            margin-top: 20px;
+            margin: 15px 0;
+            overflow: hidden;
         }
 
         .ascii { 
             color: var(--arch-blue); 
             float: left; 
             margin-right: 35px; 
-            line-height: 1.2;
             font-weight: bold;
+            border: none;
         }
 
         .fetch-content {
             display: inline-block;
             vertical-align: top;
+            padding-top: 5px;
         }
 
         .fetch-line {
-            opacity: 0;
-            transform: translateY(5px);
-            margin-bottom: 2px;
+            display: none; /* Controlled by JS for instant appearance */
+            margin-bottom: 1px;
         }
 
-        .animate-line {
-            animation: lineIn 0.1s ease-out forwards;
-        }
-
-        @keyframes lineIn {
-            to { opacity: 1; transform: translateY(0); }
-        }
+        #final-prompt { display: none; margin-top: 10px; }
 
         .label { color: var(--arch-blue); font-weight: bold; }
-        .dot { display: inline-block; width: 14px; height: 14px; margin-right: 6px; border-radius: 2px; margin-top: 10px; }
-
+        .dot { display: inline-block; width: 14px; height: 14px; margin-right: 4px; border-radius: 0px; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div id="container">
-        <div id="command-line">
-            <span class="prompt">➜ </span>
-            <span class="hostname">hyprarch.org</span> 
-            <span id="typed-command"></span><span class="cursor" id="cursor"></span>
+        <div id="initial-line">
+            <span class="dir">~</span> <span class="prompt-symbol">➜</span> 
+            <span id="typed-command"></span><span class="block-cursor blink" id="cursor-1"></span>
         </div>
 
         <div id="fastfetch">
@@ -117,20 +111,23 @@
             <div class="fetch-content" id="lines-container">
                 </div>
         </div>
+
+        <div id="final-prompt">
+            <span class="dir">~</span> <span class="prompt-symbol">➜</span> 
+            <span class="block-cursor blink"></span>
+        </div>
     </div>
 
     <script>
-        const command = "fastfetch";
+        const commandText = "fastfetch";
         const fetchLines = [
             '<span style="color:var(--arch-blue); font-weight:bold;">william</span>@<span style="color:var(--arch-blue); font-weight:bold;">hyprarch</span>',
             '<span style="color:var(--gray);">-----------------------</span>',
             '<span class="label">OS:</span> Arch Linux x86_64',
-            '<span class="label">Host:</span> Cloudflare Pages (SYD-01)',
+            '<span class="label">Host:</span> Cloudflare Pages (Edge)',
             '<span class="label">Kernel:</span> 6.8.9-arch1-1',
             '<span class="label">Uptime:</span> 99.999%',
-            '<span class="label">Packages:</span> 842 (pacman)',
             '<span class="label">Shell:</span> zsh 5.9',
-            '<span class="label">Display:</span> 1920x1080 @ 144Hz',
             '<span class="label">WM:</span> Hyprland (Wayland)',
             '<span class="label">Theme:</span> Catppuccin-Macchiato',
             '<span class="label">Terminal:</span> st-256color',
@@ -140,38 +137,43 @@
             '<div class="dot" style="background:#000;"></div><div class="dot" style="background:#f38ba8;"></div><div class="dot" style="background:#a6e3a1;"></div><div class="dot" style="background:#f9e2af;"></div><div class="dot" style="background:#89b4fa;"></div><div class="dot" style="background:#f5c2e7;"></div><div class="dot" style="background:#94e2d5;"></div><div class="dot" style="background:#a6adc8;"></div>'
         ];
 
-        async function init() {
-            const typedSpan = document.getElementById('typed-command');
-            const cursor = document.getElementById('cursor');
-            const fastfetchDiv = document.getElementById('fastfetch');
-            const linesContainer = document.getElementById('lines-container');
+        async function start() {
+            const typed = document.getElementById('typed-command');
+            const c1 = document.getElementById('cursor-1');
+            const ff = document.getElementById('fastfetch');
+            const container = document.getElementById('lines-container');
+            const final = document.getElementById('final-prompt');
 
-            // 1. Typing effect
-            await new Promise(r => setTimeout(r, 800)); // Initial pause
-            for (let i = 0; i < command.length; i++) {
-                typedSpan.textContent += command[i];
-                await new Promise(r => setTimeout(r, 100));
+            // 1. Initial wait
+            await new Promise(r => setTimeout(r, 600));
+
+            // 2. Type "fastfetch"
+            for (let char of commandText) {
+                typed.textContent += char;
+                await new Promise(r => setTimeout(r, 80));
             }
 
-            // 2. "Enter" press effect
-            await new Promise(r => setTimeout(r, 300));
-            cursor.style.display = 'none';
-            fastfetchDiv.style.display = 'block';
+            // 3. Enter key
+            await new Promise(r => setTimeout(r, 250));
+            c1.style.display = 'none';
+            ff.style.display = 'block';
 
-            // 3. Line-by-line roll out
-            for (const line of fetchLines) {
-                const div = document.createElement('div');
-                div.className = 'fetch-line';
-                div.innerHTML = line;
-                linesContainer.appendChild(div);
-                
-                // Trigger animation
-                await new Promise(r => setTimeout(r, 40)); // Fast rollout
-                div.classList.add('animate-line');
+            // 4. Print lines instantly (no fade/float)
+            for (let content of fetchLines) {
+                const line = document.createElement('div');
+                line.className = 'fetch-line';
+                line.style.display = 'block'; // Instant visibility
+                line.innerHTML = content;
+                container.appendChild(line);
+                await new Promise(r => setTimeout(r, 30)); // Quick terminal stream
             }
+
+            // 5. Show final prompt
+            await new Promise(r => setTimeout(r, 200));
+            final.style.display = 'block';
         }
 
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', start);
     </script>
 </body>
 </html>
