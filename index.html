@@ -4,114 +4,92 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#000000">
-    <title>Hyprarch Boot</title>
+    <title>hyprarch // boot</title>
     <style>
+        :root {
+            --bg: #000000;
+            --arch-blue: #1793d1;
+            --cyan: #8be9fd;
+            --magenta: #ff79c6;
+            --green: #50fa7b;
+            --yellow: #f1fa8c;
+            --gray: #6272a4;
+        }
+
         body, html {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
-            background-color: #000;
-            color: #fff;
-            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--bg);
+            color: #ffffff;
+            font-family: 'Fira Code', 'Cascadia Code', 'Courier New', monospace;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
         }
 
         #terminal {
-            padding: 20px;
+            padding: 25px;
             font-size: 14px;
-            line-height: 1.4;
-            flex-grow: 1;
+            line-height: 1.5;
             white-space: pre-wrap;
         }
 
-        .log-entry {
-            margin-bottom: 2px;
-        }
-
-        .success { color: #50fa7b; }
-        .info { color: #8be9fd; }
-        .warn { color: #f1fa8c; }
-
+        .log-entry { margin-bottom: 3px; }
+        .ok { color: var(--green); font-weight: bold; }
+        .info { color: var(--arch-blue); }
+        .warn { color: var(--yellow); }
+        
+        /* Neofetch Styling */
         #neofetch {
             display: none;
-            color: #bd93f9;
-            font-weight: bold;
-            animation: fadeIn 0.5s ease-in forwards;
+            padding: 30px;
+            animation: terminalFade 0.4s ease-out;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        .ascii { color: var(--arch-blue); float: left; margin-right: 30px; }
+        .info-label { color: var(--arch-blue); font-weight: bold; }
+        .separator { color: var(--gray); }
+        .dot { display: inline-block; width: 12px; height: 12px; margin-right: 5px; border-radius: 2px; }
+
+        @keyframes terminalFade {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
     <div id="terminal"></div>
+
     <div id="neofetch">
-<pre>
-                   -`                    william@hyprarch
-                  .o+`                   ----------------
-                 `ooo/                   OS: Arch Linux x86_64
-                `+oooo:                  Host: Oracle Cloud Ampere A1
-               `+oooooo:                 Kernel: 6.x.x-arch1-1
-               -+oooooo+:                Uptime: 99.999%
-             `/:-:++oooo+:               Shell: zsh
-            `/++++/+++++++:              WM: Hyprland
-           `/++++++++++++++:             Theme: Catppuccin
-          `/+++ooooooooooooo/`           Status: Online
-         ./ooosssso++osssssso+`          
-        .oossssso-````/ossssss+`         [--------------------]
-       -osssssso.      :ssssssso.        
-      :osssssss/        osssso+++.       
-     /ossssssss/        ossssssooo/      
-    /bclshhhhhh/        hhhhhhhhhhh.     
-   `hhhhhhhhhhh/        hhhhhhhhhhh-     
-    `::::::::::.        ::::::::::.      
+<pre class="ascii">
+                   -`
+                  .o+`
+                 `ooo/
+                `+oooo:
+               `+oooooo:
+               -+oooooo+:
+             `/:-:++oooo+:
+            `/++++/+++++++:
+           `/++++++++++++++:
+          `/+++ooooooooooooo/`
+         ./ooosssso++osssssso+`
+        .oossssso-````/ossssss+`
+       -osssssso.      :ssssssso.
+      :osssssss/        osssso+++.
+     /ossssssss/        ossssssooo/
+    /bclshhhhhh/        hhhhhhhhhhh.
+   `hhhhhhhhhhh/        hhhhhhhhhhh-
+    `::::::::::.        ::::::::::.
 </pre>
-    </div>
-
-    <script>
-        const logs = [
-            { text: "[  OK  ] Initializing HyperArch Kernel...", type: "success" },
-            { text: "[  OK  ] Mounting OCI Ampere A1 Flex storage...", type: "success" },
-            { text: "[ INFO ] Checking Cloudflare Edge network status...", type: "info" },
-            { text: "[  OK  ] Network online. Latency: 2ms", type: "success" },
-            { text: "[ INFO ] Loading Omarchy v2.4 configurations...", type: "info" },
-            { text: "[ WARN ] 'sixseven.best' legacy redirect detected.", type: "warn" },
-            { text: "[  OK  ] Starting Whisperer PWA Service...", type: "success" },
-            { text: "[  OK  ] Square POS API connected.", type: "success" },
-            { text: "[ INFO ] Greeting William Luk...", type: "info" },
-            { text: "Starting Hyprland session...", type: "info" },
-            { text: "---------------------------------------------", type: "info" }
-        ];
-
-        const terminal = document.getElementById('terminal');
-        const neofetch = document.getElementById('neofetch');
-
-        async function boot() {
-            for (const log of logs) {
-                const div = document.createElement('div');
-                div.className = 'log-entry ' + log.type;
-                div.textContent = log.text;
-                terminal.appendChild(div);
-                
-                // Auto-scroll to bottom
-                window.scrollTo(0, document.body.scrollHeight);
-                
-                // Random delay for "realism"
-                await new Promise(r => setTimeout(r, Math.random() * 300 + 50));
-            }
-
-            setTimeout(() => {
-                terminal.style.display = 'none';
-                neofetch.style.display = 'block';
-            }, 500);
-        }
-
-        boot();
-    </script>
-</body>
-</html>
+<div style="padding-top: 15px;">
+<span class="info-label">william</span><span style="color:#fff">@</span><span class="info-label">hyprarch</span><br>
+<span class="separator">----------------</span><br>
+<span class="info-label">OS</span>: Arch Linux x86_64<br>
+<span class="info-label">Host</span>: Cloudflare Pages (Edge)<br>
+<span class="info-label">Kernel</span>: 6.8.9-arch1-1<br>
+<span class="info-label">Uptime</span>: 99.999%<br>
+<span class="info-label">Shell</span>: zsh 5.9<br>
+<span class="info-label">WM</span>: Hyprland (Wayland)<br>
+<span class="info-label">Terminal</span>: st-256color<br>
+<br>
+<div class="dot" style="background: #000;"></div><div class="dot" style="background: #ff5555;"></div>
