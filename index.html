@@ -5,16 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#000000">
     <link rel="icon" type="image/png" href="favicon.png">
-    <title>hyprarch | neofetch</title>
+    <title>hyprarch | interactive shell</title>
     <style>
         :root {
             --bg: #000000;
             --arch-blue: #1793d1;
-            --cyan: #8be9fd;
-            --magenta: #ff79c6;
-            --green: #50fa7b;
-            --yellow: #f1fa8c;
-            --gray: #6272a4;
+            --white: #ffffff;
         }
 
         body, html {
@@ -23,106 +19,186 @@
             width: 100%;
             height: 100%;
             background-color: var(--bg);
-            color: #ffffff;
+            color: var(--white);
             font-family: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
         #container {
             padding: 25px;
             font-size: 14px;
-            line-height: 1.2; /* Tighter terminal spacing */
+            line-height: 1.4;
+            height: calc(100% - 50px);
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Prompts */
-        .prompt-symbol { color: #ffffff; font-weight: normal; }
-        .dir { color: #ffffff; font-weight: normal; }
+        #terminal-output {
+            overflow-y: auto;
+            flex-grow: 1;
+            margin-bottom: 10px;
+        }
+
+        /* Scrollbar styling */
+        #terminal-output::-webkit-scrollbar { width: 8px; }
+        #terminal-output::-webkit-scrollbar-track { background: var(--bg); }
+        #terminal-output::-webkit-scrollbar-thumb { background: #333; }
+
+        .prompt-line {
+            display: flex;
+            align-items: center;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .prompt-symbol { color: var(--white); margin-right: 10px; }
+        .dir { color: var(--white); }
         
+        .command-input-container {
+            display: flex;
+            align-items: center;
+        }
+
+        #command-display {
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
         .block-cursor { 
             display: inline-block; 
             width: 8px; 
             height: 15px; 
-            background: #fff; 
+            background: var(--white); 
             vertical-align: middle;
             margin-left: 2px;
         }
         .blink { animation: blink 1s steps(1) infinite; }
         @keyframes blink { 50% { opacity: 0; } }
 
+        #hidden-input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .hint {
+            color: #555;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
         /* Neofetch Section */
-        #neofetch {
-            display: none;
+        .neofetch-container {
             margin: 15px 0;
             overflow: hidden;
+            display: flex;
         }
 
         .ascii { 
             color: var(--arch-blue); 
-            float: left; 
             margin-right: 35px; 
             font-weight: bold;
-            border: none;
+            white-space: pre;
+            font-family: monospace;
             margin-top: 0;
         }
 
         .fetch-content {
-            display: inline-block;
-            vertical-align: top;
+            display: flex;
+            flex-direction: column;
             padding-top: 5px;
         }
 
         .fetch-line {
-            display: none; /* Controlled by JS for instant appearance */
-            margin-bottom: 1px;
             white-space: pre;
+            margin-bottom: 1px;
         }
 
-        #final-prompt { display: none; margin-top: 10px; }
-
         .label { color: var(--arch-blue); font-weight: bold; }
+        
+        a { color: var(--arch-blue); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .output-line { margin-bottom: 4px; }
+        .ls-item { margin-right: 20px; display: inline-block; }
+        .ls-dir { color: var(--arch-blue); font-weight: bold; }
     </style>
 </head>
-<body>
+<body onclick="focusInput()">
     <div id="container">
-        <div id="initial-line">
-            <span class="dir">~</span> <span class="prompt-symbol">❯</span> 
-            <span id="typed-command"></span><span class="block-cursor blink" id="cursor-1"></span>
+        <div id="terminal-output"></div>
+        
+        <div class="command-input-container">
+            <span class="dir" id="current-dir-display">~</span> <span class="prompt-symbol">❯</span> 
+            <span id="command-display"></span><span class="block-cursor blink"></span>
         </div>
+        
+        <div id="hint-box" class="hint" style="display: none;">[ Type 'help' or 'advanced' to begin ]</div>
+    </div>
 
-        <div id="neofetch">
-<pre class="ascii">
-                   -`
-                  .o+`
-                 `ooo/
-                `+oooo:
-               `+oooooo:
+    <input type="text" id="hidden-input" autocomplete="off" spellcheck="false">
+
+    <script>
+        const output = document.getElementById('terminal-output');
+        const input = document.getElementById('hidden-input');
+        const display = document.getElementById('command-display');
+        const dirDisplay = document.getElementById('current-dir-display');
+        const hintBox = document.getElementById('hint-box');
+
+        let mode = 'normal'; // 'normal' or 'advanced'
+        let currentPath = '/';
+        let commandHistory = [];
+        let historyIndex = -1;
+
+        const filesystem = {
+            '/': {
+                type: 'dir',
+                children: {
+                    'projects': {
+                        type: 'dir',
+                        children: {
+                            'whisperer.txt': { type: 'file', content: 'Whisperer: A secret messaging app built with privacy in mind.' },
+                            'cooked-coke.txt': { type: 'file', content: 'Cooked Coke: A experimental web project exploring fluid simulations.' },
+                            'fidgets.md': { type: 'file', content: '# Fidgets\nA collection of digital fidget toys for focus and relaxation.' }
+                        }
+                    },
+                    'about': {
+                        type: 'dir',
+                        children: {
+                            'bio.txt': { type: 'file', content: 'William Luk. Sydney-based developer. Currently in Year 8.' },
+                            'specs.txt': { type: 'file', content: 'OS: Arch Linux\nShell: Zsh / Hyprland\nEditor: Neovim' }
+                        }
+                    },
+                    'contact': {
+                        type: 'dir',
+                        children: {
+                            'email.txt': { type: 'file', content: 'will@hyprarch.org' },
+                            'github.txt': { type: 'file', content: 'https://github.com/tk-ls' }
+                        }
+                    }
+                }
+            }
+        };
+
+        const asciiArt = `                   -`
+                  .o+\`
+                 \`ooo/
+                \`+oooo:
+               \`+oooooo:
                -+oooooo+:
-             `/:-:++oooo+:
-            `/++++/+++++++:
-           `/++++++++++++++:
-          `/+++ooooooooooooo/`
-         ./ooosssso++osssssso+`
-        .oossssso-````/ossssss+`
+             \`/:-:++oooo+:
+            \`/++++/+++++++:
+           \`/++++++++++++++:
+          \`/+++ooooooooooooo/\`
+         ./ooosssso++osssssso+\`
+        .oossssso-\`\`\`\`/ossssss+\`
        -osssssso.      :ssssssso.
       :osssssss/        osssso+++.
      /ossssssss/        +ssssooo/-
-   `/ossssso+/:-        -:/+osssso+-
-  `+sso+:-`                 `.-/+oso:
- `++:.                           `-/+/
- .`                                 `/
-</pre>
-            <div class="fetch-content" id="lines-container">
-                </div>
-        </div>
-
-        <div id="final-prompt">
-            <span class="dir">~</span> <span class="prompt-symbol">❯</span> 
-            <span class="block-cursor blink"></span>
-        </div>
-    </div>
-
-    <script>
-        const commandText = "neofetch";
+   \`/ossssso+/:-        -:/+osssso+-
+  \`+sso+:-\`                 \`.-/+oso:
+ \`++:.                           \`-/+/
+ .\`                                 \`/`;
 
         function getBrowser() {
             const ua = navigator.userAgent;
@@ -137,12 +213,36 @@
             return `${window.screen.width}x${window.screen.height}`;
         }
 
-        async function start() {
-            const typed = document.getElementById('typed-command');
-            const c1 = document.getElementById('cursor-1');
-            const nf = document.getElementById('neofetch');
-            const container = document.getElementById('lines-container');
-            const final = document.getElementById('final-prompt');
+        function focusInput() {
+            input.focus();
+        }
+
+        function print(content, className = 'output-line') {
+            const line = document.createElement('div');
+            line.className = className;
+            if (typeof content === 'string') {
+                line.innerHTML = content;
+            } else {
+                line.appendChild(content);
+            }
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        async function runNeofetch() {
+            const container = document.createElement('div');
+            container.className = 'neofetch-container';
+            
+            const ascii = document.createElement('pre');
+            ascii.className = 'ascii';
+            ascii.textContent = asciiArt;
+            
+            const content = document.createElement('div');
+            content.className = 'fetch-content';
+            
+            container.appendChild(ascii);
+            container.appendChild(content);
+            output.appendChild(container);
 
             const fetchLines = [
                 '<span style="color:var(--arch-blue); font-weight:bold;">will</span>@<span style="color:var(--arch-blue); font-weight:bold;">hyprarch</span>',
@@ -159,42 +259,189 @@
                 `<span class="label">Icons:</span> Yaru-blue [GTK3]`,
                 `<span class="label">Terminal:</span> alacritty`,
                 '',
-                `<span class="label">Email:</span> <a href="mailto:will@hyprarch.org" style="color:inherit; text-decoration:none;">will@hyprarch.org</a>`,
-                `<span class="label">GitHub:</span> <a href="https://github.com/tk-ls" style="color:inherit; text-decoration:none;">github.com/tk-ls</a>`,
-                `<span class="label">Files:</span> <a href="https://files.hyprarch.org" style="color:inherit; text-decoration:none;">files.hyprarch.org</a>`,
-                `<span class="label">Git:</span> <a href="https://git.hyprarch.org" style="color:inherit; text-decoration:none;">git.hyprarch.org</a>`
+                `<span class="label">Email:</span> <a href="mailto:will@hyprarch.org">will@hyprarch.org</a>`,
+                `<span class="label">GitHub:</span> <a href="https://github.com/tk-ls" target="_blank">github.com/tk-ls</a>`,
+                `<span class="label">Files:</span> <a href="https://files.hyprarch.org" target="_blank">files.hyprarch.org</a>`,
+                `<span class="label">Git:</span> <a href="https://git.hyprarch.org" target="_blank">git.hyprarch.org</a>`
             ];
 
-            // 1. Initial wait
-            await new Promise(r => setTimeout(r, 600));
-
-            // 2. Type "neofetch"
-            for (let char of commandText) {
-                typed.textContent += char;
-                await new Promise(r => setTimeout(r, 80));
-            }
-
-            // 3. Enter key
-            await new Promise(r => setTimeout(r, 250));
-            c1.style.display = 'none';
-            nf.style.display = 'block';
-
-            // 4. Print lines instantly (no fade/float)
-            for (let content of fetchLines) {
+            for (let lineText of fetchLines) {
                 const line = document.createElement('div');
                 line.className = 'fetch-line';
-                line.style.display = 'block'; // Instant visibility
-                line.innerHTML = content;
-                container.appendChild(line);
-                await new Promise(r => setTimeout(r, 30)); // Quick terminal stream
+                line.innerHTML = lineText;
+                content.appendChild(line);
+                output.scrollTop = output.scrollHeight;
+                if (mode === 'normal') await new Promise(r => setTimeout(r, 30));
             }
-
-            // 5. Show final prompt
-            await new Promise(r => setTimeout(r, 200));
-            final.style.display = 'block';
+            
+            if (mode === 'normal') {
+                hintBox.style.display = 'block';
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', start);
+        function getDir(path) {
+            if (path === '/') return filesystem['/'];
+            const parts = path.split('/').filter(p => p);
+            let current = filesystem['/'];
+            for (let part of parts) {
+                if (current.children && current.children[part]) {
+                    current = current.children[part];
+                } else {
+                    return null;
+                }
+            }
+            return current;
+        }
+
+        function executeCommand(cmdLine) {
+            const args = cmdLine.trim().split(/\s+/);
+            const cmd = args[0].toLowerCase();
+            
+            if (cmd === '') return;
+
+            // Log command in history
+            const historyLine = document.createElement('div');
+            historyLine.className = 'prompt-line';
+            historyLine.innerHTML = `<span class="dir">${getDisplayPath(currentPath)}</span> <span class="prompt-symbol">❯</span> ${cmdLine}`;
+            print(historyLine);
+
+            if (mode === 'normal' && (cmd === 'advanced' || cmd === 'help' || cmd !== '')) {
+                mode = 'advanced';
+                hintBox.style.display = 'none';
+            }
+
+            switch (cmd) {
+                case 'help':
+                    print('Available commands: ls, cd, cat, help, clear, exit, whoami, neofetch');
+                    break;
+                case 'ls':
+                    const dir = getDir(currentPath);
+                    if (dir && dir.children) {
+                        const items = Object.keys(dir.children).sort();
+                        const line = document.createElement('div');
+                        items.forEach(item => {
+                            const span = document.createElement('span');
+                            span.className = 'ls-item' + (dir.children[item].type === 'dir' ? ' ls-dir' : '');
+                            span.textContent = item;
+                            line.appendChild(span);
+                        });
+                        print(line);
+                    }
+                    break;
+                case 'cd':
+                    let target = args[1] || '/';
+                    if (target === '~') target = '/';
+                    
+                    let newPath;
+                    if (target.startsWith('/')) {
+                        newPath = target;
+                    } else if (target === '..') {
+                        if (currentPath === '/') {
+                            newPath = '/';
+                        } else {
+                            const parts = currentPath.split('/').filter(p => p);
+                            parts.pop();
+                            newPath = '/' + parts.join('/');
+                        }
+                    } else {
+                        newPath = (currentPath === '/' ? '' : currentPath) + '/' + target;
+                    }
+
+                    // Normalize path
+                    newPath = '/' + newPath.split('/').filter(p => p).join('/');
+
+                    if (getDir(newPath) && getDir(newPath).type === 'dir') {
+                        currentPath = newPath;
+                        dirDisplay.textContent = getDisplayPath(currentPath);
+                    } else {
+                        print(`cd: no such directory: ${target}`);
+                    }
+                    break;
+                case 'cat':
+                    const fileName = args[1];
+                    if (!fileName) {
+                        print('usage: cat [file]');
+                        break;
+                    }
+                    const currentDir = getDir(currentPath);
+                    const file = currentDir.children[fileName];
+                    if (file && file.type === 'file') {
+                        print(file.content.replace(/\n/g, '<br>'));
+                    } else {
+                        print(`cat: ${fileName}: No such file`);
+                    }
+                    break;
+                case 'clear':
+                    output.innerHTML = '';
+                    break;
+                case 'whoami':
+                    print('William Luk<br>Sydney, Australia<br>Year 8 Student');
+                    break;
+                case 'exit':
+                    mode = 'normal';
+                    output.innerHTML = '';
+                    currentPath = '/';
+                    dirDisplay.textContent = '~';
+                    runNeofetch();
+                    break;
+                case 'neofetch':
+                    runNeofetch();
+                    break;
+                case 'advanced':
+                    print('Already in advanced mode.');
+                    break;
+                default:
+                    print(`command not found: ${cmd}`);
+            }
+        }
+
+        function getDisplayPath(path) {
+            return path === '/' ? '~' : '~' + path;
+        }
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const cmd = input.value;
+                executeCommand(cmd);
+                if (cmd.trim()) {
+                    commandHistory.push(cmd);
+                }
+                historyIndex = commandHistory.length;
+                input.value = '';
+                display.textContent = '';
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    input.value = commandHistory[historyIndex];
+                    display.textContent = input.value;
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (historyIndex < commandHistory.length - 1) {
+                    historyIndex++;
+                    input.value = commandHistory[historyIndex];
+                    display.textContent = input.value;
+                } else {
+                    historyIndex = commandHistory.length;
+                    input.value = '';
+                    display.textContent = '';
+                }
+            }
+        });
+
+        input.addEventListener('input', () => {
+            display.textContent = input.value;
+        });
+
+        // Initialize
+        window.onload = () => {
+            focusInput();
+            runNeofetch();
+        };
+
+        // Keep focus on hidden input
+        document.addEventListener('keydown', () => focusInput());
     </script>
 </body>
 </html>
