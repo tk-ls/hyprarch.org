@@ -76,9 +76,12 @@
         @keyframes blink { 50% { opacity: 0; } }
 
         #hidden-input {
-            position: absolute;
+            position: fixed;
+            top: 0;
+            left: 0;
             opacity: 0;
             pointer-events: none;
+            z-index: -1;
         }
 
         .hint {
@@ -436,12 +439,16 @@
 
         // Initialize
         window.onload = () => {
-            focusInput();
+            input.focus();
             runNeofetch();
         };
 
-        // Keep focus on hidden input
-        document.addEventListener('keydown', () => focusInput());
+        // Redirect all keystrokes to the hidden input unless user is selecting text
+        document.addEventListener('keydown', (e) => {
+            if (!e.ctrlKey && !e.altKey && !e.metaKey) {
+                input.focus();
+            }
+        });
     </script>
 </body>
 </html>
