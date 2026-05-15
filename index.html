@@ -3,198 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#000000">
-    <link rel="icon" type="image/png" href="favicon.png">
-    <title>hyprarch | neofetch</title>
+    <title>willslist</title>
     <style>
         :root {
-            --bg: #000000;
-            --arch-blue: #1793d1;
-            --cyan: #8be9fd;
-            --magenta: #ff79c6;
-            --green: #50fa7b;
-            --yellow: #f1fa8c;
-            --gray: #6272a4;
+            --bg-color: #ffffff;
+            --text-color: #1d1d1f;
+            --link-color: #0066cc;
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
-        body, html {
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-stack);
+            display: flex;
+            justify-content: center;
+            padding-top: 100px;
             margin: 0;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 90%;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            margin-bottom: 40px;
+        }
+
+        ul {
+            list-style: none;
             padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--bg);
-            color: #ffffff;
-            font-family: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
-            overflow-x: hidden;
         }
 
-        #container {
-            padding: 25px;
-            font-size: 14px;
-            line-height: 1.2; /* Tighter terminal spacing */
+        li {
+            margin-bottom: 16px;
         }
 
-        /* Prompts */
-        .prompt-symbol { color: #ffffff; font-weight: normal; }
-        .dir { color: #ffffff; font-weight: normal; }
-        
-        .block-cursor { 
-            display: inline-block; 
-            width: 8px; 
-            height: 15px; 
-            background: #fff; 
-            vertical-align: middle;
-            margin-left: 2px;
-        }
-        .blink { animation: blink 1s steps(1) infinite; }
-        @keyframes blink { 50% { opacity: 0; } }
-
-        /* Neofetch Section */
-        #neofetch {
-            display: none;
-            margin: 15px 0;
-            overflow: hidden;
+        a {
+            color: var(--link-color);
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 400;
+            transition: opacity 0.2s;
         }
 
-        .ascii { 
-            color: var(--arch-blue); 
-            float: left; 
-            margin-right: 35px; 
-            font-weight: bold;
-            border: none;
-            margin-top: 0;
+        a:hover {
+            opacity: 0.7;
         }
 
-        .fetch-content {
-            display: inline-block;
-            vertical-align: top;
-            padding-top: 5px;
+        footer {
+            margin-top: 80px;
+            font-size: 12px;
+            color: #86868b;
         }
-
-        .fetch-line {
-            display: none; /* Controlled by JS for instant appearance */
-            margin-bottom: 1px;
-            white-space: pre;
-        }
-
-        #final-prompt { display: none; margin-top: 10px; }
-
-        .label { color: var(--arch-blue); font-weight: bold; }
     </style>
 </head>
 <body>
-    <div id="container">
-        <div id="initial-line">
-            <span class="dir">~</span> <span class="prompt-symbol">❯</span> 
-            <span id="typed-command"></span><span class="block-cursor blink" id="cursor-1"></span>
-        </div>
-
-        <div id="neofetch">
-<pre class="ascii">
-                   -`
-                  .o+`
-                 `ooo/
-                `+oooo:
-               `+oooooo:
-               -+oooooo+:
-             `/:-:++oooo+:
-            `/++++/+++++++:
-           `/++++++++++++++:
-          `/+++ooooooooooooo/`
-         ./ooosssso++osssssso+`
-        .oossssso-````/ossssss+`
-       -osssssso.      :ssssssso.
-      :osssssss/        osssso+++.
-     /ossssssss/        +ssssooo/-
-   `/ossssso+/:-        -:/+osssso+-
-  `+sso+:-`                 `.-/+oso:
- `++:.                           `-/+/
- .`                                 `/
-</pre>
-            <div class="fetch-content" id="lines-container">
-                </div>
-        </div>
-
-        <div id="final-prompt">
-            <span class="dir">~</span> <span class="prompt-symbol">❯</span> 
-            <span class="block-cursor blink"></span>
-        </div>
+    <div class="container">
+        <h1>willslist</h1>
+        <ul>
+            <li><a href="https://files.hyprarch.org">files.hyprarch.org</a></li>
+            <li><a href="https://git.hyprarch.org">git.hyprarch.org</a></li>
+            <li><a href="https://code.hyprarch.org">code.hyprarch.org</a></li>
+        </ul>
+        <footer>&copy; 2026 willslist</footer>
     </div>
-
-    <script>
-        const commandText = "neofetch";
-
-        function getBrowser() {
-            const ua = navigator.userAgent;
-            if (ua.includes("Firefox")) return "Firefox";
-            if (ua.includes("Edg")) return "Edge";
-            if (ua.includes("Chrome")) return "Chrome";
-            if (ua.includes("Safari")) return "Safari";
-            return "Web Browser";
-        }
-
-        function getResolution() {
-            return `${window.screen.width}x${window.screen.height}`;
-        }
-
-        async function start() {
-            const typed = document.getElementById('typed-command');
-            const c1 = document.getElementById('cursor-1');
-            const nf = document.getElementById('neofetch');
-            const container = document.getElementById('lines-container');
-            const final = document.getElementById('final-prompt');
-
-            const fetchLines = [
-                '<span style="color:var(--arch-blue); font-weight:bold;">will</span>@<span style="color:var(--arch-blue); font-weight:bold;">hyprarch</span>',
-                '<span style="color:var(--arch-blue);">-------------</span>',
-                `<span class="label">OS:</span> Cloudflare Edge (Linux x86_64)`,
-                `<span class="label">Host:</span> hyprarch.org / Pages Framework`,
-                `<span class="label">Kernel:</span> 2026.4-LATEST`,
-                `<span class="label">Uptime:</span> 99.999% (The "Five Nines" flex)`,
-                `<span class="label">Packages:</span> 1 (index.html)`,
-                `<span class="label">Shell:</span> bash 5.3.9`,
-                `<span class="label">Resolution:</span> ${getResolution()}`,
-                `<span class="label">WM:</span> ${getBrowser()}`,
-                `<span class="label">Theme:</span> Adwaita-dark [GTK3]`,
-                `<span class="label">Icons:</span> Yaru-blue [GTK3]`,
-                `<span class="label">Terminal:</span> alacritty`,
-                '',
-                `<span class="label">Email:</span> <a href="mailto:will@hyprarch.org" style="color:inherit; text-decoration:none;">will@hyprarch.org</a>`,
-                `<span class="label">GitHub:</span> <a href="https://github.com/tk-ls" style="color:inherit; text-decoration:none;">github.com/tk-ls</a>`,
-                `<span class="label">Files:</span> <a href="https://files.hyprarch.org" style="color:inherit; text-decoration:none;">files.hyprarch.org</a>`,
-                `<span class="label">Git:</span> <a href="https://git.hyprarch.org" style="color:inherit; text-decoration:none;">git.hyprarch.org</a>`
-            ];
-
-            // 1. Initial wait
-            await new Promise(r => setTimeout(r, 600));
-
-            // 2. Type "neofetch"
-            for (let char of commandText) {
-                typed.textContent += char;
-                await new Promise(r => setTimeout(r, 80));
-            }
-
-            // 3. Enter key
-            await new Promise(r => setTimeout(r, 250));
-            c1.style.display = 'none';
-            nf.style.display = 'block';
-
-            // 4. Print lines instantly (no fade/float)
-            for (let content of fetchLines) {
-                const line = document.createElement('div');
-                line.className = 'fetch-line';
-                line.style.display = 'block'; // Instant visibility
-                line.innerHTML = content;
-                container.appendChild(line);
-                await new Promise(r => setTimeout(r, 30)); // Quick terminal stream
-            }
-
-            // 5. Show final prompt
-            await new Promise(r => setTimeout(r, 200));
-            final.style.display = 'block';
-        }
-
-        document.addEventListener('DOMContentLoaded', start);
-    </script>
 </body>
 </html>
